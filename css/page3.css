@@ -1,0 +1,90 @@
+
+
+
+
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+h1.custom-heading {
+    font-size: 2em; 
+    color: #ece2e2; 
+    text-align: center; 
+}
+
+
+h1.custom-heading span {
+
+    font-size: 50px; 
+    color: rgb(184, 81, 81);
+    font-weight: bold; 
+}
+
+
+body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background-image: url('../html/image/b5.jpg'); 
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: -1;
+}
+
+
+body {
+    color: #ece2e2; 
+
+    font-family: 'Black Ops One', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0;
+    overflow: hidden;
+}
+
+
+
+
+
+.groups-container {
+    display: flex;
+    flex-direction: row-reverse;
+    margin-bottom: 20px;
+}
+
+.group {
+    display: flex;
+    flex-direction: column-reverse;
+    margin-right: 20px;
+}
+
+.group-button {
+    border: none;
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 10px;
+    margin: 5px;
+    width: 80px;
+    border-radius: 5px;
+}
+
+.group-1 .group-button { background-color: red; }
+.group-2 .group-button { background-color: blue; }
+.group-3 .group-button { background-color: green; }
+.group-4 .group-button { background-color: rgb(199, 216, 10); }
+
+#result {
+    font-size: 18px;
+    margin-top: 20px;
+}

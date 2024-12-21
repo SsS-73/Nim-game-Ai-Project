@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Black+Ops+One" />
+    <link rel="stylesheet" href="../css/page3.css">
+
+    <title>Grouped Nim Game</title>
+</head>
+
+<style>
+    
+
+
+
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+h1.custom-heading {
+    font-size: 2em; 
+    color: #ece2e2; 
+    text-align: center; 
+}
+
+
+h1.custom-heading span {
+
+    font-size: 50px; 
+    color: rgb(184, 81, 81);
+    font-weight: bold; 
+}
+
+
+body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background-image: url('../html/image/b5.jpg'); 
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: -1;
+}
+
+
+body {
+    color: #ece2e2; 
+
+    font-family: 'Black Ops One', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0;
+    overflow: hidden;
+}
+
+
+
+
+
+.groups-container {
+    display: flex;
+    flex-direction: row-reverse;
+    margin-bottom: 20px;
+}
+
+.group {
+    display: flex;
+    flex-direction: column-reverse;
+    margin-right: 20px;
+}
+
+.group-button {
+    border: none;
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 10px;
+    margin: 5px;
+    width: 80px;
+    border-radius: 5px;
+}
+
+.group-1 .group-button { background-color: red; }
+.group-2 .group-button { background-color: blue; }
+.group-3 .group-button { background-color: green; }
+.group-4 .group-button { background-color: rgb(199, 216, 10); }
+
+#result {
+    font-size: 18px;
+    margin-top: 20px;
+}
+
+</style>
+<body>
+
+
+    <h1 class="custom-heading">Grouped <span class="w1">Nim</span> Game</h1>
+    <p>Click the sticks to take sticks from a group you can remove any number of sticks but only from one row.</p>
+        <p> The player who removes the last stick loses!</p>
+
+    <div class="groups-container" id="groups-container">
+        <!-- Sticks groups will be dynamically added here -->
+    </div>
+
+    <div id="turn"></div>
+
+    <div id="result"></div>
+
+    <script>
+        let groups = [1, 3, 5];
+        let currentPlayer = 'human';
+
+        function initGame() {
+            groups = [1, 3, 5];
+            currentPlayer = 'human';
+            updateUI();
+        }
+
+        function updateUI() {
+
+        const userName = sessionStorage.getItem('name');    
+
+    document.getElementById('groups-container').innerHTML = '';
+    for (let i = 0; i < groups.length; i++) {
+        const groupContainer = document.createElement('div');
+        groupContainer.className = `group group-${i + 1}`;
+
+        for (let j = groups[i]; j > 0; j--) {
+            const spaces = j - 1; // Calculate the number of spaces before the sticks
+            const stick = document.createElement('button');
+            stick.className = `group-button group-${i + 1}`;
+            stick.textContent = ' '.repeat(spaces) + '|';
+            stick.addEventListener('click', () => chooseGroupStick(i, j));
+            groupContainer.appendChild(stick);
+        }
+
+        document.getElementById('groups-container').appendChild(groupContainer);
+    }
+
+    // Display whose turn it is
+    const myDiv = document.getElementById('turn');
+
+// Create a new <p> element
+    const turnText = document.createElement('p');
+    turnText.textContent = `${currentPlayer === 'human' ? userName : 'PC'}'s turn`;
+    myDiv.innerHTML = '';
+    myDiv.appendChild(turnText);
+}
+
+        function chooseGroupStick(groupIndex, sticksToTake) {
+            if (currentPlayer === 'human') {
+                const sticksInGroup = groups[groupIndex];
+                if (sticksInGroup >= sticksToTake) {
+                    groups[groupIndex] -= sticksToTake;
+                    if (groups.every(count => count === 0)) {
+                        showResult('You lose!');
+                        return;
+                    }
+                    currentPlayer = 'computer';
+                    setTimeout(computerMove, 1000); // 1000 milliseconds (1 second) delay
+                } else {
+                    alert('Please choose a valid number of sticks to take.');
+                }
+            }
+            updateUI();
+        }
+
+        function computerMove() {
+            const { groupIndex, sticksToTake } = getBestMove();
+            groups[groupIndex] -= sticksToTake;
+
+            if (groups.every(count => count === 0)) {
+                showResult('You win!');
+            } else {
+                currentPlayer = 'human';
+            }
+            updateUI();
+        }
+
+            function getBestMove() {
+    let bestMove = { groupIndex: -1, sticksToTake: -1 };
+    let bestScore = -Infinity;
+
+    // Increase the depth to 5 for a more challenging AI
+    for (let i = 0; i < groups.length; i++) {
+        for (let j = 1; j <= groups[i]; j++) {
+            const tempGroups = [...groups];
+            tempGroups[i] -= j;
+
+            const score = alphaBeta(tempGroups, 5, -Infinity, Infinity, false);
+
+            if (score > bestScore) {
+                bestScore = score;
+                bestMove = { groupIndex: i, sticksToTake: j };
+            }
+        }
+    }
+
+    return bestMove;
+}
+
+        function alphaBeta(groups, depth, alpha, beta, maximizingPlayer) {
+            if (depth === 0 || groups.every(count => count === 0)) {
+                return maximizingPlayer ? 1 : -1;
+            }
+
+            if (maximizingPlayer) {
+                let maxEval = -Infinity;
+
+                for (let i = 0; i < groups.length; i++) {
+                    for (let j = 1; j <= groups[i]; j++) {
+                        const tempGroups = [...groups];
+                        tempGroups[i] -= j;
+
+                        const eval = alphaBeta(tempGroups, depth - 1, alpha, beta, false);
+                        maxEval = Math.max(maxEval, eval);
+                        alpha = Math.max(alpha, eval);
+
+                        if (beta <= alpha) {
+                            break;
+                        }
+                    }
+                }
+
+                return maxEval;
+            } else {
+                let minEval = Infinity;
+
+                for (let i = 0; i < groups.length; i++) {
+                    for (let j = 1; j <= groups[i]; j++) {
+                        const tempGroups = [...groups];
+                        tempGroups[i] -= j;
+
+                        const eval = alphaBeta(tempGroups, depth - 1, alpha, beta, true);
+                        minEval = Math.min(minEval, eval);
+                        beta = Math.min(beta, eval);
+
+                        if (beta <= alpha) {
+                            break;
+                        }
+                    }
+                }
+
+                return minEval;
+            }
+        }
+
+        function showResult(message) {
+            document.getElementById('result').textContent = message;
+            setTimeout(initGame, 3000); // Reset the game after 3 seconds
+        }
+
+        // Initialize the game on page load
+        initGame();
+    </script>
+
+</body>
+</html>

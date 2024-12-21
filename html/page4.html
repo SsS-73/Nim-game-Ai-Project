@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        #game-container {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+
+        .stack {
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: center;
+            margin: 0 10px;
+        }
+
+        .penny {
+            width: 40px;
+            height: 40px;
+            background-color: gold;
+            border: 1px solid #ccc;
+            margin: 2px;
+            cursor: pointer;
+        }
+    </style>
+    <title>Nim-2 Game</title>
+</head>
+<body>
+    <div id="game-container"></div>
+
+    <script>
+        const gameContainer = document.getElementById('game-container');
+        let stacks = [7]; // Initial stack configuration
+        let playerTurn = true;
+
+        function initGame() {
+            gameContainer.innerHTML = '';
+            for (let i = 0; i < stacks.length; i++) {
+                const stackContainer = document.createElement('div');
+                stackContainer.className = 'stack';
+
+                for (let j = 0; j < stacks[i]; j++) {
+                    const penny = document.createElement('div');
+                    penny.className = 'penny';
+                    penny.addEventListener('click', () => makeMove(i, j + 1));
+                    stackContainer.appendChild(penny);
+                }
+
+                gameContainer.appendChild(stackContainer);
+            }
+
+            if (playerTurn) {
+                // Player's turn
+                alert("Your turn!");
+            } else {
+                // AI's move
+                setTimeout(() => makeAIMove(), 500);
+            }
+        }
+
+        function makeMove(stackIndex, numToRemove) {
+            if (playerTurn && numToRemove < stacks[stackIndex]) {
+                stacks[stackIndex] -= numToRemove;
+                playerTurn = false;
+                initGame();
+            } else if (playerTurn) {
+                alert('Invalid move! Choose a valid number of pennies to remove.');
+            }
+        }
+
+        function makeAIMove() {
+            const { stackIndex, numToRemove } = getBestMove(stacks.slice()); // Pass a copy of the current state to avoid modifying the original
+            stacks[stackIndex] -= numToRemove;
+            playerTurn = true;
+            initGame();
+        }
+
+        function getBestMove(currentStacks) {
+            const result = alphaBeta(currentStacks, 3, -Infinity, Infinity, true);
+            return result.move;
+        }
+
+        function alphaBeta(stacks, depth, alpha, beta, maximizingPlayer) {
+            if (depth === 0 || stacks.every(count => count <= 2)) {
+                const value = evaluatePosition(stacks);
+                return { value };
+            }
+
+            if (maximizingPlayer) {
+                let maxEval = -Infinity;
+                let bestMove = null;
+
+                for (let i = 0; i < stacks.length; i++) {
+                    for (let j = 1; j <= stacks[i]; j++) {
+                        const tempStacks = [...stacks];
+                        tempStacks[i] -= j;
+
+                        const eval = alphaBeta(tempStacks, depth - 1, alpha, beta, false).value;
+                        if (eval > maxEval) {
+                            maxEval = eval;
+                            bestMove = { stackIndex: i, numToRemove: j };
+                        }
+
+                        alpha = Math.max(alpha, eval);
+                        if (beta <= alpha) {
+                            break;
+                        }
+                    }
+                }
+
+                return { value: maxEval, move: bestMove };
+            } else {
+                let minEval = Infinity;
+                let bestMove = null;
+
+                for (let i = 0; i < stacks.length; i++) {
+                    for (let j = 1; j <= stacks[i]; j++) {
+                        const tempStacks = [...stacks];
+                        tempStacks[i] -= j;
+
+                        const eval = alphaBeta(tempStacks, depth - 1, alpha, beta, true).value;
+                        if (eval < minEval) {
+                            minEval = eval;
+                            bestMove = { stackIndex: i, numToRemove: j };
+                        }
+
+                        beta = Math.min(beta, eval);
+                        if (beta <= alpha) {
+                            break;
+                        }
+                    }
+                }
+
+                return { value: minEval, move: bestMove };
+            }
+        }
+
+        function evaluatePosition(stacks) {
+            // This function should return an evaluation of the current position.
+            // It can be a simple heuristic value or a more complex evaluation based on the game state.
+            // For simplicity, let's return 0 for now.
+            return 0;
+        }
+
+        function checkGameResult() {
+            if (stacks.every(count => count <= 2)) {
+                const winner = stacks.length % 2 === 0 ? 'You' : 'AI';
+                alert(`${winner} wins! Game Over.`);
+                stacks = [7]; // Reset the game
+                playerTurn = true;
+                initGame();
+            }
+        }
+
+        // Initialize the game on page load
+        initGame();
+    </script>
+</body>
+</html>
